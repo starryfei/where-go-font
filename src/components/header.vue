@@ -1,8 +1,5 @@
 <template>
   <div>
-  <div id="app">
-  {{ path }}
-  </div>
   <el-container :style="{'hight': '100%'}" direction="vertical">
     <el-header >
       <el-button type="primary" :style="{'margin-right':'20px'}" icon="el-icon-search">搜索</el-button>
@@ -30,19 +27,20 @@
 <script>
 import 'echarts/map/js/china.js';
 import layoutVue from '../views/layout.vue';
+var chartData = [];
 export default {
   name: 'header',
     // el: '#app',
 
   data(){
     return{
-      path: '',
       name:"starryfei",
     }
   },
   mounted() {
-    this.drawChinaMap();
-    this.randomData();
+    // this.drawChinaMap();
+    // this.randomData();
+    this.drawChinaMap()
  
   },
   methods: {
@@ -94,65 +92,101 @@ export default {
         return Math.round(Math.random()*500);
     },
     drawChinaMap() {
-      let mydata = [
-        {name: '北京',value: '100' },{name: '天津',value: this.randomData() },
-        {name: '上海',value: this.randomData() },{name: '重庆',value: this.randomData() },
-        {name: '河北',value: this.randomData() },{name: '河南',value: this.randomData() },
-        {name: '云南',value: this.randomData() },{name: '辽宁',value: this.randomData() },
-        {name: '黑龙江',value: this.randomData() },{name: '湖南',value: this.randomData() },
-        {name: '安徽',value: this.randomData() },{name: '山东',value: this.randomData() },
-        {name: '新疆',value: this.randomData() },{name: '江苏',value: this.randomData() },
-        {name: '浙江',value: this.randomData() },{name: '江西',value: this.randomData() },
-        {name: '湖北',value: this.randomData() },{name: '广西',value: this.randomData() },
-        {name: '甘肃',value: this.randomData() },{name: '山西',value: this.randomData() },
-        {name: '内蒙古',value: this.randomData() },{name: '陕西',value: this.randomData() },
-        {name: '吉林',value: this.randomData() },{name: '福建',value: this.randomData() },
-        {name: '贵州',value: this.randomData() },{name: '广东',value: this.randomData() },
-        {name: '青海',value: this.randomData() },{name: '西藏',value: this.randomData() },
-        {name: '四川',value: this.randomData() },{name: '宁夏',value: this.randomData() },
-        {name: '海南',value: this.randomData() },{name: '台湾',value: this.randomData() },
-        {name: '香港',value: this.randomData() },{name: '澳门',value: this.randomData() }
-    ]
+      console.log(chartData)
+  
  // 基于准备好的dom，初始化echarts实例
     // let china = this.$echarts.init(document.getElementById('china'))
     let chart = this.$echarts.init(document.getElementById('china'))
 
     let map_option = {
-        backgroundColor: '#FFFFFF',
+        // backgroundColor: '#FFFFFF',
         title: {
-            text: '全国地图大数据',
+            text: '旅行路线',
             subtext: '',
             x:'center'
         },
         tooltip : {
             trigger: 'item'
         },
-        //左侧小导航图标
-        visualMap: {
-            show : true,
-            x: 'left',
-            y: 'center',
-            splitList: [
-                {start: 500, end:600},{start: 400, end: 500},
-                {start: 300, end: 400},{start: 200, end: 300},
-                {start: 100, end: 200},{start: 0, end: 100},
-            ],
-            color: ['#5475f5', '#9feaa5', '#85daef','#74e2ca', '#e6ac53', '#9fb5ea']
+        toolbox:{
+          show: true,
+          feature: {
+            saveAsImage: {
+              show: true,
+            }
+          }
+        },
+        geo: {
+          type: 'map',
+          map: 'china',  //重点
+          roam: true,
+          label: {
+              normal: {
+                  show: true,
+                  color:'#111'
+              },
+              emphasis: {
+                  textStyle: {
+                      color: '#111',
+                      show: true,
+                  }
+              }
+          },
+          itemStyle: {
+            normal: {
+                borderColor: '#323c48',
+                areaColor: '#ddb926',
+            },
+            emphasis: {
+                areaColor: '#2a333d',
+                // borderWidth: 0
+            }
+          },
+
         },
         series:[{
-            name: '数据',
-            type: 'map',
-            mapType: 'china',
+            name: '地址',
+            type: 'scatter',
+            // mapType: 'china',
+            coordinateSystem: 'geo',
+
             // roam: true,
             label: {
                 normal: {
-                    show: true  //省份名称
+                    formatter: '{b}',
+                    position: 'right',
+                    show: true
                 },
                 emphasis: {
-                    show: false
+                    show: true
                 }
             },
-            data:mydata  //数据
+            data:chartData,  //数据
+            //  markLine : {
+            //         smooth:true,
+            //         symbol: ['none', 'none'],
+            //         effect : {
+            //             show: true,
+            //             scaleSize: 1,
+            //             period: 30,
+            //             color: '#fff',
+            //             shadowColor: 'rgba(220,220,220,0.4)',
+            //             shadowBlur : 5
+            //         },
+            //         itemStyle : {
+            //             normal: {
+            //                 borderWidth: 0.05,
+            //                 lineStyle: {
+            //                     type: 'solid',
+            //                     color: 'aqua'
+            //                 }
+            //             }
+            //         },
+            //         data : chartData
+            //     },
+            symbolSize: function(val) {
+              return 10;
+            },
         }]
 
     };
@@ -169,23 +203,28 @@ export default {
               .then(response => {
                 // this.path = response;
                 // console.log(response);
-                console.log(response.data.result)
+                console.log(response.data.code)
 
                 let lat = response.data.lat;
                 let lng = response.data.lng;
+                if(response.data.code == 200) {
+                  chartData.push({
+                    name: value,
+                    value:[lng,lat]
+                  }),
+                  this.drawChinaMap()
 
-
-                console.log(lat);
-
-                 this.$message({
+                  
+                };
+                this.$message({
                   type: 'success',
-                  // path = value,
                   message: '你的地点是: ' +  lat+lng,
+                  
                 })
               }).cath(error =>{
                   console.log('load failure: '+error)
-              })
-
+              });
+              
          
         }).catch(() => {
           this.$message({
@@ -193,9 +232,6 @@ export default {
             message: '取消输入'
           });       
         });
-      // this.$axios
-      // .get('/api/address?address='+value)
-      // .then(response => (this.path = response))
       }
       
   }
